@@ -21,10 +21,43 @@ public class BookService {
 
     private final BookRepository bookRepository;
 
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
-    }
+//    public List<Book> getAllBooks() {
+//        return bookRepository.findAll();
+//    }
+public List<BookResponse> getAllBooks() {
+    return bookRepository.findAll()
+            .stream()
+            .map(book -> BookResponse.builder()
+                    .id(book.getId())
+                    .bookName(book.getBookName())
+                    .author(book.getAuthor())
+                    .genre(book.getGenre())
+                    .totalCopies(book.getTotalCopies())
+                    .availableCopies(book.getAvailableCopies())
+                    .build())
+            .toList();
+}
 
+    public BookResponse getBookById(Long id) {
+
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+
+        return BookResponse.builder()
+                .id(book.getId())
+                .bookName(book.getBookName())
+                .coverImageUrl(book.getCoverImageUrl())
+                .author(book.getAuthor())
+                .publisher(book.getPublisher())
+                .genre(book.getGenre())
+                .language(book.getLanguage())
+                .totalCopies(book.getTotalCopies())
+                .availableCopies(book.getAvailableCopies())
+                .description(book.getDescription())
+                .publishedYear(book.getPublishedYear())
+                .isbn(book.getIsbn())
+                .build();
+    }
 
     public BookResponse createBook(BookCreateRequest request, MultipartFile image)throws IOException {
 

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/books")
@@ -22,5 +23,15 @@ public class BookController {
                                      @RequestPart("image") MultipartFile image) throws IOException {
         return bookService.createBook(request,image);
 
+    }
+
+    @GetMapping
+    public List<BookResponse> getAllBooks() {
+        return bookService.getAllBooks();
+    }
+
+    @GetMapping("/{id}")
+    public BookResponse getBookById(@PathVariable Long id) {
+        return bookService.getBookById(id);
     }
 }
