@@ -99,6 +99,68 @@ public List<BookResponse> getAllBooks() {
                 .build();
     }
 
+//    public List<BookResponse> searchBooks(String query) {
+//
+//        List<Book> books = bookRepository
+//                .findByBookNameContainingIgnoreCaseOrAuthorContainingIgnoreCaseOrGenreContainingIgnoreCase(
+//                        query, query, query
+//                );
+
+    public List<BookResponse> searchBooks(
+            String query,
+            String author,
+            String bookName,
+            String genre,
+            String publisher,
+            Integer publishedYear
+    ) {
+
+        List<Book> books;
+
+        if (query != null && !query.isBlank()) {
+            books = bookRepository
+                    .findByBookNameContainingIgnoreCaseOrAuthorContainingIgnoreCaseOrGenreContainingIgnoreCaseOrPublisherContainingIgnoreCase(
+                            query, query, query, query
+                    );
+        }
+        else if (author != null) {
+            books = bookRepository.findByAuthorContainingIgnoreCase(author);
+        }
+        else if (bookName != null) {
+            books = bookRepository.findByBookNameContainingIgnoreCase(bookName);
+        }
+        else if (genre != null) {
+            books = bookRepository.findByGenreContainingIgnoreCase(genre);
+        }
+        else if (publisher != null) {
+            books = bookRepository.findByPublisherContainingIgnoreCase(publisher);
+        }
+        else if (publishedYear != null) {
+            books = bookRepository.findByPublishedYearGreaterThanEqual(publishedYear);
+        }
+        else {
+            books = bookRepository.findAll();
+        }
+
+
+        return books.stream()
+            .map(book -> BookResponse.builder()
+                    .id(book.getId())
+                    .bookName(book.getBookName())
+                    .coverImageUrl(book.getCoverImageUrl())
+                    .author(book.getAuthor())
+                    .publisher(book.getPublisher())
+                    .genre(book.getGenre())
+                    .language(book.getLanguage())
+                    .totalCopies(book.getTotalCopies())
+                    .availableCopies(book.getAvailableCopies())
+                    .description(book.getDescription())
+                    .publishedYear(book.getPublishedYear())
+                    .isbn(book.getIsbn())
+                    .build())
+            .toList();
+}
+
 
     private void validatePublishedYear(Integer year) {
         int currentYear = Year.now().getValue();

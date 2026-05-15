@@ -34,4 +34,31 @@ public class BookController {
     public BookResponse getBookById(@PathVariable Long id) {
         return bookService.getBookById(id);
     }
+
+//    @GetMapping("/search")
+//    public List<BookResponse> searchBooks(@RequestParam String query) {
+//        return bookService.searchBooks(query);
+//    }
+
+//    @GetMapping("/search")
+//    public List<BookResponse> searchBooks(
+//            @RequestParam(required = false) String query,
+//            @RequestParam(required = false) String author,
+//            @RequestParam(required = false) String bookName,
+//            @RequestParam(required = false) String genre
+//    ) {
+//        return bookService.searchBooks(query, author, bookName, genre);
+//    }
+
+    @GetMapping("/search")
+    public List<BookResponse> searchBooks(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String bookName,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) String publisher,
+            @RequestParam(required = false) Integer publishedYear
+    ) {
+        return bookService.searchBooks(query, author, bookName, genre, publisher, publishedYear);
+    }
 }
