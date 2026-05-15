@@ -40,16 +40,6 @@ public class BookController {
 //        return bookService.searchBooks(query);
 //    }
 
-//    @GetMapping("/search")
-//    public List<BookResponse> searchBooks(
-//            @RequestParam(required = false) String query,
-//            @RequestParam(required = false) String author,
-//            @RequestParam(required = false) String bookName,
-//            @RequestParam(required = false) String genre
-//    ) {
-//        return bookService.searchBooks(query, author, bookName, genre);
-//    }
-
     @GetMapping("/search")
     public List<BookResponse> searchBooks(
             @RequestParam(required = false) String query,
@@ -60,5 +50,19 @@ public class BookController {
             @RequestParam(required = false) Integer publishedYear
     ) {
         return bookService.searchBooks(query, author, bookName, genre, publisher, publishedYear);
+    }
+
+    @PutMapping("/{id}")
+    public BookResponse updateBook(
+            @PathVariable Long id,
+            @RequestPart("book") @Valid BookCreateRequest request,
+            @RequestPart(value = "image", required = false) MultipartFile image           // required = false // update possible with or without image
+    ) throws IOException {
+        return bookService.updateBook(id, request, image);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteBook(@PathVariable Long id) {
+        bookService.deleteBook(id);
     }
 }

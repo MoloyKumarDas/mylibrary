@@ -161,6 +161,64 @@ public List<BookResponse> getAllBooks() {
             .toList();
 }
 
+    public BookResponse updateBook(Long id, BookCreateRequest request, MultipartFile image) throws IOException {
+
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+
+        validatePublishedYear(request.getPublishedYear());
+
+        // Update image if new image is given
+        if (image != null && !image.isEmpty()) {
+
+            String uploadDir = "uploads/";
+            String fileName = System.currentTimeMillis() + "_" + image.getOriginalFilename();
+
+            Path path = Paths.get(uploadDir + fileName);
+            Files.createDirectories(path.getParent());
+            Files.copy(image.getInputStream(), path);
+
+            String imageUrl = "/uploads/" + fileName;
+
+            book.setCoverImageUrl(imageUrl);
+        }
+
+        book.setBookName(request.getBookName());
+        book.setAuthor(request.getAuthor());
+        book.setPublisher(request.getPublisher());
+        book.setGenre(request.getGenre());
+        book.setLanguage(request.getLanguage());
+        book.setTotalCopies(request.getTotalCopies());
+        book.setAvailableCopies(request.getTotalCopies());
+        book.setDescription(request.getDescription());
+        book.setPublishedYear(request.getPublishedYear());
+        book.setIsbn(request.getIsbn());
+
+        Book updated = bookRepository.save(book);
+
+        return BookResponse.builder()
+                .id(updated.getId())
+                .bookName(updated.getBookName())
+                .coverImageUrl(updated.getCoverImageUrl())
+                .author(updated.getAuthor())
+                .publisher(updated.getPublisher())
+                .genre(updated.getGenre())
+                .language(updated.getLanguage())
+                .totalCopies(updated.getTotalCopies())
+                .availableCopies(updated.getAvailableCopies())
+                .description(updated.getDescription())
+                .publishedYear(updated.getPublishedYear())
+                .isbn(updated.getIsbn())
+                .build();
+    }
+
+    public void deleteBook(Long id) {
+
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
+
+        bookRepository.delete(book);
+    }
 
     private void validatePublishedYear(Integer year) {
         int currentYear = Year.now().getValue();
