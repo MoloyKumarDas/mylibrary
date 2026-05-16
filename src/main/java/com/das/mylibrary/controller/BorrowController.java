@@ -3,6 +3,7 @@ package com.das.mylibrary.controller;
 import com.das.mylibrary.dto.BorrowRequest;
 import com.das.mylibrary.dto.BorrowResponse;
 import com.das.mylibrary.dto.ReturnRequest;
+import com.das.mylibrary.dto.ReturnResponse;
 import com.das.mylibrary.entity.Borrow;
 import com.das.mylibrary.service.BorrowService;
 import jakarta.validation.Valid;
@@ -34,9 +35,19 @@ public class BorrowController {
     }
 
     @PostMapping("/return")
-    public String returnBook(@RequestBody ReturnRequest request) {
-        borrowService.returnBook(request);
-        return "Book returned successfully";
+    public ResponseEntity<ReturnResponse> returnBook(@RequestBody ReturnRequest request) {
+
+        Borrow borrow = borrowService.returnBook(request);
+
+        ReturnResponse response = new ReturnResponse(
+                "Book returned successfully",
+                borrow.getId(),
+//                borrow.getDueDate()
+                borrow.getReturned(),
+                borrow.getFineAmount()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/history/{borrowerId}")

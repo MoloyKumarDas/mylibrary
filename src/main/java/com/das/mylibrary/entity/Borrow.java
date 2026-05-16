@@ -47,4 +47,6 @@ public class Borrow {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    private Integer fineAmount = 0;
 }

@@ -56,7 +56,7 @@ public class BorrowService {
     }
 
     @Transactional
-    public void returnBook(ReturnRequest request) {
+    public Borrow returnBook(ReturnRequest request) {
 
         Borrow borrow = borrowRepository.findById(request.getBorrowId())
                 .orElseThrow(() -> new RuntimeException("Borrow record not found"));
@@ -71,20 +71,27 @@ public class BorrowService {
 
         book.setAvailableCopies(book.getAvailableCopies() + 1);
 
-        borrowRepository.save(borrow);
-        bookRepository.save(book);
-
         LocalDate today = LocalDate.now();
 
         if (borrow.getDueDate() != null && today.isAfter(borrow.getDueDate())) {
+
             long daysLate = java.time.temporal.ChronoUnit.DAYS.between(
                     borrow.getDueDate(),
                     today
             );
 
+            int fine = (int) daysLate * 5;
+
+            borrow.setFineAmount(fine);
+
             System.out.println("Late return detected. Days late: " + daysLate);
         }
+
+        bookRepository.save(book);
+
+        return borrowRepository.save(borrow);
     }
+
 
 
     public List<Borrow> getBorrowHistory(Long borrowerId) {
