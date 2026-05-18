@@ -36,17 +36,21 @@ public class Borrow {
     @JoinColumn(name = "borrower_id")
     private Borrower borrower;
 
-
     // Dates
     private LocalDate borrowDate;
 
     private LocalDate dueDate;
 
     // Returned or not
-    private Boolean returned = false;
+    // private Boolean returned = false;
+    private LocalDate returnDate;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     private Integer fineAmount = 0;
+
+//    private Boolean lost ;
+    private LocalDate lostDate;
+
 }
