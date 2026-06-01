@@ -1,5 +1,6 @@
 package com.das.mylibrary.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,4 +34,9 @@ public class MyBorrowedBook {
     private LocalDate lostDate;
 
     private String notes;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    @JsonIgnore
+    private User user;
 }

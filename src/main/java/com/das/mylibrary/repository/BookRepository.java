@@ -12,24 +12,30 @@ import java.util.Optional;
 
 public interface BookRepository extends JpaRepository<Book, Long> {
 
-    List<Book> findByBookNameContainingIgnoreCaseOrAuthorContainingIgnoreCaseOrGenreContainingIgnoreCaseOrPublisherContainingIgnoreCase(
-            String bookName,
-            String author,
-            String genre,
-            String publisher
-    );
+    List<Book> findByUserId(Long userId);
 
-    List<Book> findByAuthorContainingIgnoreCase(String author);
+    @Query("""
+        SELECT b FROM Book b
+        WHERE b.user.id = :userId
+        AND (
+            LOWER(b.bookName) LIKE LOWER(CONCAT('%', :query, '%')) OR
+            LOWER(b.author) LIKE LOWER(CONCAT('%', :query, '%')) OR
+            LOWER(b.genre) LIKE LOWER(CONCAT('%', :query, '%')) OR
+            LOWER(b.publisher) LIKE LOWER(CONCAT('%', :query, '%'))
+        )
+    """)
 
-    List<Book> findByBookNameContainingIgnoreCase(String bookName);
+    List<Book> searchByUser(@Param("userId") Long userId, @Param("query") String query);
 
-    List<Book> findByGenreContainingIgnoreCase(String genre);
+    List<Book> findByUserIdAndAuthorContainingIgnoreCase(Long userId, String author);
+    List<Book> findByUserIdAndBookNameContainingIgnoreCase(Long userId, String bookName);
+    List<Book> findByUserIdAndGenreContainingIgnoreCase(Long userId, String genre);
+    List<Book> findByUserIdAndPublisherContainingIgnoreCase(Long userId, String publisher);
+    List<Book> findByUserIdAndPublishedYearGreaterThanEqual(Long userId, Integer publishedYear);
 
-    List<Book> findByPublisherContainingIgnoreCase(String publisher);
-
-    List<Book> findByPublishedYearGreaterThanEqual(Integer publishedYear);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)                            // avoid concurrency problem
+    @Lock(LockModeType.PESSIMISTIC_WRITE)                             // avoid concurrency
     @Query("SELECT b FROM Book b WHERE b.id = :id")
     Optional<Book> findByIdForUpdate(@Param("id") Long id);
 }
+
+

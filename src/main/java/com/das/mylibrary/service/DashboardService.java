@@ -1,31 +1,33 @@
 package com.das.mylibrary.service;
 
 import com.das.mylibrary.dto.DashboardResponse;
+import com.das.mylibrary.entity.User;
 import com.das.mylibrary.repository.MyBorrowedBookRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class DashboardService {
 
     private final MyBorrowedBookRepository repository;
+    private final UserService userService;
 
-    // books currently you borrowed from others
     public long getCurrentlyBorrowed() {
-        return repository.countByReturnDateIsNullAndLostDateIsNull();
+        User user = userService.getLoggedInUser();
+        return repository.countByUserIdAndReturnDateIsNullAndLostDateIsNull(user.getId());
     }
 
-    // overdue borrowed books
     public long getOverdueBorrowedBooks() {
-        return repository.countOverdueBooks();
+        User user = userService.getLoggedInUser();
+        return repository.countOverdueBooks(user.getId());
     }
 
     public DashboardResponse getDashboard() {
-
+        User user = userService.getLoggedInUser();
         return DashboardResponse.builder()
-                .currentlyBorrowed(getCurrentlyBorrowed())
-                .overdueBorrowed(getOverdueBorrowedBooks())
+                .currentlyBorrowed(repository.countByUserIdAndReturnDateIsNullAndLostDateIsNull(user.getId()))
+                .overdueBorrowed(repository.countOverdueBooks(user.getId()))
                 .build();
     }
 }

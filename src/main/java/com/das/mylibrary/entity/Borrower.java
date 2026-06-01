@@ -1,5 +1,6 @@
 package com.das.mylibrary.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -7,7 +8,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "borrowers")
+@Table(
+        name = "borrowers",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"email", "user_id"}),
+                @UniqueConstraint(columnNames = {"phone", "user_id"})
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,17 +29,21 @@ public class Borrower {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)                        // removed unique = true
     private String email;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, length = 20)           // removed unique = true
     private String phone;
 
     private String address;
 
-//    private LocalDateTime createdAt = LocalDateTime.now();
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    @JsonIgnore
+    private User user;
 }
+

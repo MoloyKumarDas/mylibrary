@@ -22,12 +22,6 @@ import lombok.Data;
 })
 public class BookResponse {
 
-//    private Long id;
-//    private String bookName;
-//    private String author;
-//    private String genre;
-//    private int totalCopies;
-//    private int availableCopies;
     private Long id;
     private String bookName;
     private String coverImageUrl;

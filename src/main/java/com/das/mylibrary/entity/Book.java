@@ -55,7 +55,11 @@ public class Book {
 //    @Max(2100)
     private Integer publishedYear;
 
-    @Column(unique = true, length = 13)
+    @Column(unique = true, length = 20)
     private String isbn;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
 }
