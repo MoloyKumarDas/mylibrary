@@ -5,6 +5,7 @@ import com.das.mylibrary.dto.BookResponse;
 import com.das.mylibrary.service.BookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,6 +29,14 @@ public class BookController {
     @GetMapping
     public List<BookResponse> getAllBooks() {
         return bookService.getAllBooks();
+    }
+
+    @GetMapping("/paged")
+    public Page<BookResponse> getBooksPaged(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        return bookService.getBooksPaged(page, size);
     }
 
     @GetMapping("/{id}")

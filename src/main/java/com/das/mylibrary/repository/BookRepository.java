@@ -2,6 +2,8 @@ package com.das.mylibrary.repository;
 
 import com.das.mylibrary.entity.Book;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +16,8 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     List<Book> findByUserId(Long userId);
 
+    Page<Book> findByUserId(Long userId, Pageable pageable);
+
     @Query("""
         SELECT b FROM Book b
         WHERE b.user.id = :userId
@@ -24,7 +28,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             LOWER(b.publisher) LIKE LOWER(CONCAT('%', :query, '%'))
         )
     """)
-
     List<Book> searchByUser(@Param("userId") Long userId, @Param("query") String query);
 
     List<Book> findByUserIdAndAuthorContainingIgnoreCase(Long userId, String author);
@@ -33,9 +36,11 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findByUserIdAndPublisherContainingIgnoreCase(Long userId, String publisher);
     List<Book> findByUserIdAndPublishedYearGreaterThanEqual(Long userId, Integer publishedYear);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)                             // avoid concurrency
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT b FROM Book b WHERE b.id = :id")
     Optional<Book> findByIdForUpdate(@Param("id") Long id);
 }
+
+
 
 

@@ -6,6 +6,9 @@ import com.das.mylibrary.entity.Book;
 import com.das.mylibrary.entity.User;
 import com.das.mylibrary.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,25 +26,24 @@ public class BookService {
     private final BookRepository bookRepository;
     private final UserService userService;
 
-//    public List<Book> getAllBooks() {
-//        return bookRepository.findAll();
-//    }
-public List<BookResponse> getAllBooks() {
+    public List<BookResponse> getAllBooks() {
 
-    User user = userService.getLoggedInUser();
+        User user = userService.getLoggedInUser();
 
-    return bookRepository.findByUserId(user.getId())
-            .stream()
-            .map(book -> BookResponse.builder()
-                    .id(book.getId())
-                    .bookName(book.getBookName())
-                    .author(book.getAuthor())
-                    .genre(book.getGenre())
-                    .totalCopies(book.getTotalCopies())
-                    .availableCopies(book.getAvailableCopies())
-                    .build())
-            .toList();
-}
+        return bookRepository.findByUserId(user.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public Page<BookResponse> getBooksPaged(int page, int size) {
+
+        User user = userService.getLoggedInUser();
+        Pageable pageable = PageRequest.of(page, size);
+
+        return bookRepository.findByUserId(user.getId(), pageable)
+                .map(this::toResponse);
+    }
 
     public BookResponse getBookById(Long id) {
 
@@ -54,26 +56,10 @@ public List<BookResponse> getAllBooks() {
             throw new RuntimeException("Unauthorized access");
         }
 
-//        Book book = bookRepository.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Book not found"));
-
-        return BookResponse.builder()
-                .id(book.getId())
-                .bookName(book.getBookName())
-                .coverImageUrl(book.getCoverImageUrl())
-                .author(book.getAuthor())
-                .publisher(book.getPublisher())
-                .genre(book.getGenre())
-                .language(book.getLanguage())
-                .totalCopies(book.getTotalCopies())
-                .availableCopies(book.getAvailableCopies())
-                .description(book.getDescription())
-                .publishedYear(book.getPublishedYear())
-                .isbn(book.getIsbn())
-                .build();
+        return toResponse(book);
     }
 
-    public BookResponse createBook(BookCreateRequest request, MultipartFile image)throws IOException {
+    public BookResponse createBook(BookCreateRequest request, MultipartFile image) throws IOException {
 
         User user = userService.getLoggedInUser();
 
@@ -84,7 +70,6 @@ public List<BookResponse> getAllBooks() {
 
         Path path = Paths.get(uploadDir + fileName);
         Files.createDirectories(path.getParent());
-//        Files.write(path, image.getBytes());
         Files.copy(image.getInputStream(), path);
 
         String imageUrl = "/uploads/" + fileName;
@@ -106,72 +91,49 @@ public List<BookResponse> getAllBooks() {
 
         Book savedBook = bookRepository.save(book);
 
-        return BookResponse.builder()
-                .id(savedBook.getId())
-                .bookName(savedBook.getBookName())
-                .author(savedBook.getAuthor())
-                .genre(savedBook.getGenre())
-                .totalCopies(savedBook.getTotalCopies())
-                .availableCopies(savedBook.getAvailableCopies())
-                .build();
+        return toResponse(savedBook);
     }
 
+    public List<BookResponse> searchBooks(
+            String query,
+            String author,
+            String bookName,
+            String genre,
+            String publisher,
+            Integer publishedYear
+    ) {
 
-public List<BookResponse> searchBooks(
-        String query,
-        String author,
-        String bookName,
-        String genre,
-        String publisher,
-        Integer publishedYear
-) {
+        User user = userService.getLoggedInUser();
+        Long userId = user.getId();
 
-    User user = userService.getLoggedInUser();  // ✅ must be declared
-    Long userId = user.getId();
+        List<Book> books;
 
-    List<Book> books;  // ✅ must be declared
+        if (query != null && !query.isBlank()) {
+            books = bookRepository.searchByUser(userId, query);
+        }
+        else if (author != null) {
+            books = bookRepository.findByUserIdAndAuthorContainingIgnoreCase(userId, author);
+        }
+        else if (bookName != null) {
+            books = bookRepository.findByUserIdAndBookNameContainingIgnoreCase(userId, bookName);
+        }
+        else if (genre != null) {
+            books = bookRepository.findByUserIdAndGenreContainingIgnoreCase(userId, genre);
+        }
+        else if (publisher != null) {
+            books = bookRepository.findByUserIdAndPublisherContainingIgnoreCase(userId, publisher);
+        }
+        else if (publishedYear != null) {
+            books = bookRepository.findByUserIdAndPublishedYearGreaterThanEqual(userId, publishedYear);
+        }
+        else {
+            books = bookRepository.findByUserId(userId);
+        }
 
-    if (query != null && !query.isBlank()) {
-        books = bookRepository.searchByUser(userId, query);
+        return books.stream()
+                .map(this::toResponse)
+                .toList();
     }
-    else if (author != null) {
-        books = bookRepository.findByUserIdAndAuthorContainingIgnoreCase(userId, author);
-    }
-    else if (bookName != null) {
-        books = bookRepository.findByUserIdAndBookNameContainingIgnoreCase(userId, bookName);
-    }
-    else if (genre != null) {
-        books = bookRepository.findByUserIdAndGenreContainingIgnoreCase(userId, genre);
-    }
-    else if (publisher != null) {
-        books = bookRepository.findByUserIdAndPublisherContainingIgnoreCase(userId, publisher);
-    }
-    else if (publishedYear != null) {
-        books = bookRepository.findByUserIdAndPublishedYearGreaterThanEqual(userId, publishedYear);
-    }
-    else {
-        books = bookRepository.findByUserId(userId);
-    }
-
-    return books.stream()
-            .map(book -> BookResponse.builder()
-                    .id(book.getId())
-                    .bookName(book.getBookName())
-                    .coverImageUrl(book.getCoverImageUrl())
-                    .author(book.getAuthor())
-                    .publisher(book.getPublisher())
-                    .genre(book.getGenre())
-                    .language(book.getLanguage())
-                    .totalCopies(book.getTotalCopies())
-                    .availableCopies(book.getAvailableCopies())
-                    .description(book.getDescription())
-                    .publishedYear(book.getPublishedYear())
-                    .isbn(book.getIsbn())
-                    .build())
-            .toList();
-}
-
-
 
     public BookResponse updateBook(Long id, BookCreateRequest request, MultipartFile image) throws IOException {
 
@@ -186,7 +148,6 @@ public List<BookResponse> searchBooks(
 
         validatePublishedYear(request.getPublishedYear());
 
-        // Update image if new image is given
         if (image != null && !image.isEmpty()) {
 
             String uploadDir = "uploads/";
@@ -214,22 +175,8 @@ public List<BookResponse> searchBooks(
 
         Book updated = bookRepository.save(book);
 
-        return BookResponse.builder()
-                .id(updated.getId())
-                .bookName(updated.getBookName())
-                .coverImageUrl(updated.getCoverImageUrl())
-                .author(updated.getAuthor())
-                .publisher(updated.getPublisher())
-                .genre(updated.getGenre())
-                .language(updated.getLanguage())
-                .totalCopies(updated.getTotalCopies())
-                .availableCopies(updated.getAvailableCopies())
-                .description(updated.getDescription())
-                .publishedYear(updated.getPublishedYear())
-                .isbn(updated.getIsbn())
-                .build();
+        return toResponse(updated);
     }
-
 
     public void deleteBook(Long id) {
 
@@ -247,20 +194,29 @@ public List<BookResponse> searchBooks(
 
     private void validatePublishedYear(Integer year) {
         int currentYear = Year.now().getValue();
-//        if (year == null) {
-//            throw new IllegalArgumentException("");
-//        }
 
         if (year > currentYear) {
             throw new IllegalArgumentException("Enter Valid Year");
         }
-//        if (year < 1000) {
-//            throw new IllegalArgumentException("Published year is too old");
-//        }
     }
 
-
-
-
-
+    private BookResponse toResponse(Book book) {
+        return BookResponse.builder()
+                .id(book.getId())
+                .bookName(book.getBookName())
+                .coverImageUrl(book.getCoverImageUrl())
+                .author(book.getAuthor())
+                .publisher(book.getPublisher())
+                .genre(book.getGenre())
+                .language(book.getLanguage())
+                .totalCopies(book.getTotalCopies())
+                .availableCopies(book.getAvailableCopies())
+                .description(book.getDescription())
+                .publishedYear(book.getPublishedYear())
+                .isbn(book.getIsbn())
+                .build();
+    }
 }
+
+
+
